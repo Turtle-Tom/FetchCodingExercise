@@ -8,6 +8,7 @@ The requirements provided are as follows:
 - Display all the items grouped by "listId"
 - Sort the results first by "listId" then by "name" when displaying.
 - Filter out any items where "name" is blank or null.
+
 It was also requested to "make the project buildable on the latest (non-pre release) tools and supporting the current release mobile OS."
 
 ## User Guide
