@@ -1,5 +1,6 @@
 package com.example.fetchcodingexercise
 
+import android.content.res.TypedArray
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
@@ -7,7 +8,9 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fetchcodingexercise.databinding.ListItemBinding
 
-class JsonRecyclerViewAdapter (private var names: ArrayList<String>
+class JsonRecyclerViewAdapter (
+    private var names: ArrayList<String>,
+    private var colors: ArrayList<Int>
 ) : RecyclerView.Adapter<JsonRecyclerViewAdapter.JsonViewHolder>() {
 
     override fun onCreateViewHolder(
@@ -23,6 +26,7 @@ class JsonRecyclerViewAdapter (private var names: ArrayList<String>
 
     override fun onBindViewHolder(holder: JsonViewHolder, position: Int) {
         holder.name.text = names[position]
+        holder.name.setBackgroundResource(colors[position])
     }
 
     override fun getItemCount(): Int = names.size

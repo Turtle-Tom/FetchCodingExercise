@@ -1,5 +1,6 @@
 package com.example.fetchcodingexercise
 
+import android.content.res.TypedArray
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
@@ -15,14 +16,15 @@ class MainActivity : AppCompatActivity() {
     private val listViewModel by viewModels<ListViewModel>()
     private lateinit var listAdapter: JsonRecyclerViewAdapter
 
-    private fun getJsonArrayList(): ArrayList<String> {
+    private fun getJsonArrayList(): Pair<ArrayList<String>, ArrayList<Int>> {
 //        val list = listViewModel.fetchList.value!!.filter {
 //            !it.issue
 //        }.mapTo(arrayListOf()) {
 //            it.name.toString()
 //        }
 
-        var list = ArrayList<String>()
+        var nameList = ArrayList<String>()
+        var colorList = ArrayList<Int>()
         val modelList = listViewModel.fetchList.value!!
         var listId = -1
 
@@ -30,17 +32,20 @@ class MainActivity : AppCompatActivity() {
             if (!modelList[i].issue) {
                 if (listId != modelList[i].listId) {
                     listId = modelList[i].listId
-                    list.add("List ID # $listId")
+                    nameList.add("List ID # $listId")
+                    colorList.add(R.color.grey)
                 }
-                list.add(modelList[i].name.toString())
+                nameList.add(modelList[i].name.toString())
+                colorList.add(R.color.white)
             }
         }
 
-        return list
+        return Pair(nameList, colorList)
     }
 
     private fun createAdapter() {
-        listAdapter = JsonRecyclerViewAdapter(getJsonArrayList()).also {
+        val lists = getJsonArrayList()
+        listAdapter = JsonRecyclerViewAdapter(lists.first, lists.second).also {
             binding.list.adapter = it
         }
     }
