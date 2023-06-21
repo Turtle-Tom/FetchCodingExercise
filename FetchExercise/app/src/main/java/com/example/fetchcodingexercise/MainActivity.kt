@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import androidx.activity.viewModels
 import com.example.fetchcodingexercise.databinding.ActivityMainBinding
 
@@ -15,10 +16,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listAdapter: JsonRecyclerViewAdapter
 
     private fun getJsonArrayList(): ArrayList<String> {
-        val list = listViewModel.fetchList.value!!.filter {
-            !it.issue
-        }.mapTo(arrayListOf()) {
-            it.name.toString()
+//        val list = listViewModel.fetchList.value!!.filter {
+//            !it.issue
+//        }.mapTo(arrayListOf()) {
+//            it.name.toString()
+//        }
+
+        var list = ArrayList<String>()
+        val modelList = listViewModel.fetchList.value!!
+        var listId = -1
+
+        for (i in 0 until modelList.size) {
+            if (!modelList[i].issue) {
+                if (listId != modelList[i].listId) {
+                    listId = modelList[i].listId
+                    list.add("List ID # $listId")
+                }
+                list.add(modelList[i].name.toString())
+            }
         }
 
         return list

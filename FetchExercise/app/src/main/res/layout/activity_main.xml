@@ -20,9 +20,8 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginTop="?attr/actionBarSize"
         android:id="@+id/list"
         android:name="course.examples.fragments.dynamic.TitleFragment"
         android:layout_width="match_parent"
