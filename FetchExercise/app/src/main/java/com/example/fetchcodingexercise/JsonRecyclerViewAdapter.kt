@@ -10,11 +10,6 @@ import com.example.fetchcodingexercise.databinding.ListItemBinding
 class JsonRecyclerViewAdapter (private var names: ArrayList<String>
 ) : RecyclerView.Adapter<JsonRecyclerViewAdapter.JsonViewHolder>() {
 
-    internal fun setData(newData: ArrayList<String>) {
-        names = newData
-        notifyDataSetChanged()
-    }
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewtype: Int

@@ -1,7 +1,5 @@
 package com.example.fetchcodingexercise
 
-import android.content.SharedPreferences
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,9 +8,7 @@ import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.net.HttpCookie
 import java.net.URL
-import kotlin.concurrent.thread
 
 class ListViewModel : ViewModel(), DefaultLifecycleObserver {
     /**
@@ -27,13 +23,10 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
      * This set will hold all ids currently in use, to ensure no ids are repeated.
      * Note: This is not referring to listIds
      */
-    private val _idSet: MutableLiveData<HashSet<Int>> =
-        MutableLiveData<HashSet<Int>>()
-    internal val idSet: LiveData<HashSet<Int>>
-        get() = _idSet
+    private val idSet = HashSet<Int>()
 
-    /*
-        TODO: This needs to be checked for loading in or retrieving from storage
+    /**
+     * This will hold the previously raw json string as an array of json elements
      */
     private var jsonData = JSONArray()
 
@@ -46,14 +39,13 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
 
     init {
         _fetchList.value = ArrayList<JsonElement>()
-        _idSet.value = HashSet<Int>()
     }
 
-    internal fun sendNetworkRequest() {
+    private fun sendNetworkRequest() {
         // Network requests must be done on a separate thread from main
         runBlocking {
             // Using Dispatchers.IO due to large read
-            val job = launch(Dispatchers.IO) {
+            launch(Dispatchers.IO) {
                 // Get the raw string data to be converted to JSON
                 val rawJsonData: String = URL(URL_STR).readText()
                 jsonData = JSONArray(rawJsonData)
@@ -61,21 +53,22 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         }
     }
 
-    internal fun loadData(sharedPrefs: SharedPreferences) {
-        if (sharedPrefs.getBoolean(R.bool.data_loaded.toString(), false)) { // Data already paresed
-            loadFromFirebase()
-        } else { // Data has not been parsed in yet
-            sendNetworkRequest()
-            parseData()
-            Log.d("Giraffe", _fetchList.value!!.toString())
-        }
+    internal fun loadData() {
+//        if (sharedPrefs.getBoolean(R.bool.data_loaded.toString(), false)) { // Data already parsed
+//            loadFromFirebase()
+//        } else { // Data has not been parsed in yet
+//            sendNetworkRequest()
+//            parseData()
+//        }
+        sendNetworkRequest()
+        parseData()
     }
 
     /**
      * This function takes the data stored in jsonData and validates values, adds the data to the
      * LiveData list, and sorts that list.
      */
-    internal fun parseData() {
+    private fun parseData() {
         // iterate through json array, appending elements into fetchList
         for (i in 0 until jsonData.length()) {
             // unlikely an object here will be null, but check in case
@@ -103,7 +96,7 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
                 null
             }
 
-            val name: String? = try {
+            var name: String? = try {
                 currObj.getString("name")
             } catch(e: JSONException) {
                 null
@@ -116,49 +109,28 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
             if (id == null || listId == null)
                 continue
 
-            if (id == 444)
-                print("444")
-
             // Data is valid, look for potential issues
-            var issue = false
-            var msg: String? = null
+            var issue: Boolean
+            var msg: String?
 
             // Check for valid name
-            issue = name == null || name.isBlank()
+            issue = name == null || name.isBlank() || name == "null"
             if (issue) {
                 msg = "Empty name field"
+                name = null // Ensure it isn't "null"
             } else {
                 // add() returns true if id doesn't exist, so not an issue
-                issue = !_idSet.value!!.add(id)
+                issue = !idSet.add(id)
                 msg = if (!issue) null else "This id is already in use."
             }
 
             // Data is valid, add to the list, indicating any possible issues
-            val currElem = JsonElement(id, listId, name as String?, issue, msg)
+            val currElem = JsonElement(id, listId, name, issue, msg)
             _fetchList.value!!.add(currElem)
         }
 
         // All elements are added. Sort now so we aren't sorting every activity call
         _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy {it.name})
-    }
-
-    internal fun updateData(pref: SharedPreferences) {
-        val prefEditor = pref.edit()
-
-        prefEditor.putBoolean(R.bool.data_loaded.toString(), true)
-        prefEditor.commit()
-
-        saveToFirebase()
-
-        prefEditor.apply()
-    }
-
-    internal fun saveToFirebase() {
-        // TODO: Save to database
-    }
-
-    internal fun loadFromFirebase() {
-        // TODO: Load from database
     }
 
     internal fun bindToActivityLifecycle(mainActivity: MainActivity) {
