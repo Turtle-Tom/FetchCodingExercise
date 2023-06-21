@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>\
-    <!-- Indicates whether json data has been retrieved -->
-    <bool name="data_loaded">false</bool>
-</resources>
