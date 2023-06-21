@@ -69,9 +69,11 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         addFilterBar()
-
         createAdapter()
 
+        binding.radioSort.setOnCheckedChangeListener { _, _ ->
+            binding.radioChecked()
+        }
     }
 
     /**
@@ -85,5 +87,16 @@ class MainActivity : AppCompatActivity() {
             filtersChecked.add(listId)
             listAdapter.updateData(getJsonArrayList())
         }
+    }
+
+    private fun ActivityMainBinding.radioChecked() {
+        when (radioSort.checkedRadioButtonId) {
+            lexBut.id -> {
+                listViewModel.resortData(true)
+            }
+            else -> listViewModel.resortData(false)
+        }
+
+        listAdapter.updateData(getJsonArrayList())
     }
 }

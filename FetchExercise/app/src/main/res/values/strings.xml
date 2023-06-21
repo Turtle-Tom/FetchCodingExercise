@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Fetch Coding Exercise</string>
     <string name="filter_header">Filter by List ID:</string>
+    <string name="sort_header">Sort By:</string>
+    <string name="lex">lexicographic</string>
+    <string name="num">numerical</string>
 </resources>

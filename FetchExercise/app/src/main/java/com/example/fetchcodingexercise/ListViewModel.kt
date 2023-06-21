@@ -146,6 +146,14 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         _fetchListIds.value!!.sort()
     }
 
+    internal fun resortData(lex: Boolean) {
+        if (lex) {
+            _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy {it.name})
+        } else {
+            _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy
+            {it.name?.substring(5, it.name.length)?.toInt()})
+        }
+    }
     internal fun bindToActivityLifecycle(mainActivity: MainActivity) {
         mainActivity.lifecycle.addObserver(this)
     }

@@ -39,16 +39,5 @@ class JsonRecyclerViewAdapter (
     inner class JsonViewHolder(binding: ListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         val name: TextView = binding.textView
-
-        init {
-            itemView.setOnClickListener {
-                // Display a Toast message indicting the selected item
-                Toast.makeText(
-                    binding.root.context,
-                    name.text,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
     }
 }

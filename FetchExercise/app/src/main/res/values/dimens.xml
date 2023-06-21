@@ -2,4 +2,5 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="filter_head_font_size">18sp</dimen>
+    <dimen name="font_size">16sp</dimen>
 </resources>
