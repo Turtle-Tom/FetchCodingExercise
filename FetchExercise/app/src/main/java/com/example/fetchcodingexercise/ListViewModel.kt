@@ -20,6 +20,14 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         get() = _fetchList
 
     /**
+     * This will be used for filtering by list id group
+     */
+    private val _fetchListIds: MutableLiveData<MutableList<Int>> =
+        MutableLiveData<MutableList<Int>>()
+    internal val fetchListIds: LiveData<MutableList<Int>>
+        get() = _fetchListIds
+
+    /**
      * This set will hold all ids currently in use, to ensure no ids are repeated.
      * Note: This is not referring to listIds
      */
@@ -38,7 +46,8 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
     data class JsonElement(val id: Int, val listId: Int, val name: String?, val issue: Boolean, val msg: String?)
 
     init {
-        _fetchList.value = ArrayList<JsonElement>()
+        _fetchList.value = ArrayList()
+        _fetchListIds.value = mutableListOf()
     }
 
     private fun sendNetworkRequest() {
@@ -127,10 +136,14 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
             // Data is valid, add to the list, indicating any possible issues
             val currElem = JsonElement(id, listId, name, issue, msg)
             _fetchList.value!!.add(currElem)
+            if (!_fetchListIds.value!!.contains(listId)) {
+                _fetchListIds.value!!.add(listId)
+            }
         }
 
         // All elements are added. Sort now so we aren't sorting every activity call
         _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy {it.name})
+        _fetchListIds.value!!.sort()
     }
 
     internal fun bindToActivityLifecycle(mainActivity: MainActivity) {

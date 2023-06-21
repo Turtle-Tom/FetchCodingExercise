@@ -1,11 +1,8 @@
 package com.example.fetchcodingexercise
 
-import android.content.res.TypedArray
 import android.os.Bundle
+import android.widget.CheckBox
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.TextView
 import androidx.activity.viewModels
 import com.example.fetchcodingexercise.databinding.ActivityMainBinding
 
@@ -15,21 +12,28 @@ class MainActivity : AppCompatActivity() {
     // ViewModel that retrieves, parses, saves, and loads json data
     private val listViewModel by viewModels<ListViewModel>()
     private lateinit var listAdapter: JsonRecyclerViewAdapter
+    private lateinit var filtersChecked: ArrayList<Int>
+
+    private fun addFilterBar() {
+        for (i in listViewModel.fetchListIds.value!!) {
+            val box = CheckBox(this)
+            box.text = "List #$i"
+            box.id = i
+            box.setTextColor(getColor(R.color.filter_text))
+            box.setOnClickListener { boxChecked(i) }
+            binding.filters.addView(box)
+        }
+    }
 
     private fun getJsonArrayList(): Pair<ArrayList<String>, ArrayList<Int>> {
-//        val list = listViewModel.fetchList.value!!.filter {
-//            !it.issue
-//        }.mapTo(arrayListOf()) {
-//            it.name.toString()
-//        }
-
-        var nameList = ArrayList<String>()
-        var colorList = ArrayList<Int>()
+        val nameList = ArrayList<String>()
+        val colorList = ArrayList<Int>()
         val modelList = listViewModel.fetchList.value!!
         var listId = -1
 
         for (i in 0 until modelList.size) {
-            if (!modelList[i].issue) {
+            if (!modelList[i].issue &&
+                (filtersChecked.isEmpty() || filtersChecked.contains(modelList[i].listId))) {
                 if (listId != modelList[i].listId) {
                     listId = modelList[i].listId
                     nameList.add("List ID # $listId")
@@ -60,9 +64,26 @@ class MainActivity : AppCompatActivity() {
         // ListViewModel needs to get the data that will be displayed
         listViewModel.loadData()
 
+        filtersChecked = ArrayList()
+
         setSupportActionBar(binding.toolbar)
+
+        addFilterBar()
 
         createAdapter()
 
+    }
+
+    /**
+     * A button click toggles the checkbox visibility.
+     */
+    private fun boxChecked(listId: Int) {
+        if (filtersChecked.contains(listId)) {
+            filtersChecked.remove(listId)
+            listAdapter.updateData(getJsonArrayList())
+        } else {
+            filtersChecked.add(listId)
+            listAdapter.updateData(getJsonArrayList())
+        }
     }
 }

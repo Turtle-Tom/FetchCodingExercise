@@ -1,6 +1,5 @@
 package com.example.fetchcodingexercise
 
-import android.content.res.TypedArray
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
@@ -30,6 +29,12 @@ class JsonRecyclerViewAdapter (
     }
 
     override fun getItemCount(): Int = names.size
+
+    internal fun updateData(lists: Pair<ArrayList<String>, ArrayList<Int>>) {
+        names = lists.first
+        colors = lists.second
+        notifyDataSetChanged()
+    }
 
     inner class JsonViewHolder(binding: ListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
