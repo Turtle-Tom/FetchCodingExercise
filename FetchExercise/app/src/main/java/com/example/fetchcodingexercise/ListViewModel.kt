@@ -12,7 +12,9 @@ import java.net.URL
 
 class ListViewModel : ViewModel(), DefaultLifecycleObserver {
     /**
-     * fetchList will hold the list of items retrieved from https://fetch-hiring.s3.amazonaws.com/hiring.json
+     * fetchList will hold the list of items retrieved from
+     * https://fetch-hiring.s3.amazonaws.com/hiring.json
+     * as well as additional issue info
      */
     private val _fetchList: MutableLiveData<ArrayList<JsonElement>> =
             MutableLiveData<ArrayList<JsonElement>>()
@@ -20,7 +22,8 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         get() = _fetchList
 
     /**
-     * This will be used for filtering by list id group
+     * This will be used for filtering by list id group. Note lists is used instead of set so we
+     * can more easily store the data in sorted order.
      */
     private val _fetchListIds: MutableLiveData<MutableList<Int>> =
         MutableLiveData<MutableList<Int>>()
@@ -30,18 +33,20 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
     /**
      * This set will hold all ids currently in use, to ensure no ids are repeated.
      * Note: This is not referring to listIds
+     * Duplicate ids are a potential issue for expansions of this project, and it is unknown if
+     * any currently exist in the supplied dataset.
      */
     private val idSet = HashSet<Int>()
 
     /**
-     * This will hold the previously raw json string as an array of json elements
+     * This will hold the previously raw json string as an array of json elements.
      */
     private var jsonData = JSONArray()
 
     /**
      * This data class is the expected format of the json objects retrieved from the list.
      * Additionally holds data on potential issues with "id" or "name". For sake of brevity in this
-     * exercise, only one issue will be held, either with id OR name.
+     * exercise, only one issue will be held, either involving id OR name.
      */
     data class JsonElement(val id: Int, val listId: Int, val name: String?, val issue: Boolean, val msg: String?)
 
@@ -50,10 +55,14 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         _fetchListIds.value = mutableListOf()
     }
 
+    /**
+     * Creates a coroutine to request the data from the online JSON file. Data is read in and
+     * converted to a JSONArray, stored as a class variable.
+     */
     private fun sendNetworkRequest() {
         // Network requests must be done on a separate thread from main
         runBlocking {
-            // Using Dispatchers.IO due to large read
+            // Using Dispatchers.IO due to potentially large read
             launch(Dispatchers.IO) {
                 // Get the raw string data to be converted to JSON
                 val rawJsonData: String = URL(URL_STR).readText()
@@ -62,13 +71,11 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         }
     }
 
+    /**
+     * Primarily called by the MainActivity, within onCreate(), in order to retrieve and parse the
+     * data needed for display.
+     */
     internal fun loadData() {
-//        if (sharedPrefs.getBoolean(R.bool.data_loaded.toString(), false)) { // Data already parsed
-//            loadFromFirebase()
-//        } else { // Data has not been parsed in yet
-//            sendNetworkRequest()
-//            parseData()
-//        }
         sendNetworkRequest()
         parseData()
     }
@@ -85,14 +92,14 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
             try {
                 currObj = jsonData.getJSONObject(i)
             } catch (e: JSONException) {
-                continue
+                continue // Null object, continue to next item
             }
 
             // Make sure json object data is valid
             if (!currObj.has("id") || !currObj.has("listId") || !currObj.has("name"))
-                continue
+                continue // Not valid, continue to next item
 
-            // These three values will create the JsonElement data class object
+            // These three values will be used to create the JsonElement data class object
             val id: Int? = try {
                 currObj.getInt("id")
             } catch (e: JSONException) {
@@ -112,7 +119,7 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
             }
 
             /**
-             * names that are null will be brought in for edit by admin, but not display.
+             * names that are null will be brought in to store, but not display.
              * Need to check that id and listId are valid ints, otherwise, don't add
              */
             if (id == null || listId == null)
@@ -136,6 +143,9 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
             // Data is valid, add to the list, indicating any possible issues
             val currElem = JsonElement(id, listId, name, issue, msg)
             _fetchList.value!!.add(currElem)
+            // Need to store all listIds for grouping into sublists. Could be done statically as
+            // they are known for the exercise, but dynamic is preferred. If listId not known, add
+            // to known list (not Set because we want sorted order).
             if (!_fetchListIds.value!!.contains(listId)) {
                 _fetchListIds.value!!.add(listId)
             }
@@ -146,19 +156,29 @@ class ListViewModel : ViewModel(), DefaultLifecycleObserver {
         _fetchListIds.value!!.sort()
     }
 
+    /**
+     * Read re-sort, this is called if the user decided to change the sort order to/from
+     * lexicographical/numerical. The boolean passed in referred to true/false in regard to lex.
+     */
     internal fun resortData(lex: Boolean) {
-        if (lex) {
+        if (lex) { // User wants lexicographical
             _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy {it.name})
-        } else {
+        } else { // User wants numerical
             _fetchList.value!!.sortWith(compareBy<JsonElement> {it.listId}.thenBy
             {it.name?.substring(5, it.name.length)?.toInt()})
         }
     }
+
+    /**
+     * Bind ViewModel's lifecycle with main activity
+     */
     internal fun bindToActivityLifecycle(mainActivity: MainActivity) {
         mainActivity.lifecycle.addObserver(this)
     }
 
-    // Holds constants such as URL of data location
+    /**
+     * Holds constants such as URL of data location
+     */
     companion object {
         const val URL_STR = "https://fetch-hiring.s3.amazonaws.com/hiring.json"
     }
